@@ -6,6 +6,10 @@ import numpy as np
 from wikipedia2vec import Wikipedia2Vec
 import fasttext
 from sklearn.model_selection import train_test_split
+from tqdm import tqdm
+
+
+SEED = 42
 
 
 def add_partial_ktru_codes(
@@ -75,6 +79,7 @@ class Embedder():
         if use_wiki2vec:
             self.wiki2vec = Wikipedia2Vec.load('ruwiki_20180420_300d.pkl')
 
+
     def vectorize(self, token):
         try:
             fast_text_vector = self.ft.get_word_vector(token)
@@ -101,9 +106,79 @@ class Embedder():
         return np.mean(sent_emb, axis=0)
 
 
+def map_from_exact_to_enlarged(
+        ktru_code: str,
+        mapping_table: pd.DataFrame
+    ):
+    '''
+    mapping_table: | code | parent_code | is_template |
+    '''
+    try:
+        ktru_record = mapping_table[mapping_table['code'] == ktru_code]
+        is_template = ktru_record['is_template'].array[0]
+
+        if is_template == True:
+            return ktru_code
+        else:
+            parent_code = ktru_record['parent_code'].array[0]
+            return parent_code
+
+    except IndexError:
+        return ktru_code
+
+
+def remove_rare_codes(
+        df: pd.DataFrame,
+        column: str='ktru_12',
+        min_freq: int=2,
+        group_by: str='product_name'
+    ) -> pd.DataFrame:
+
+    df = df.copy()
+    frequent = df.groupby(column).count()[group_by] >= min_freq
+    frequent = frequent.index[frequent]
+    indexes = df[column].isin(frequent)
+    df = df[indexes]
+    return df
+
+
 def separate_train_test(
         df: pd.DataFrame,
-        full_ktru_col: str,
-        
+        test_size=0.2,
+        stratify_col='ktru_code'    
     ):
-    pass
+
+    df = df.copy()
+
+    y_train, y_test = train_test_split(
+                        df.index, 
+                        test_size=test_size, 
+                        stratify=df[stratify_col], 
+                        random_state=SEED
+                    )
+
+    df['train'] = df.index.isin(y_train)
+
+    return df
+
+
+def get_embeddings(
+        df: pd.DataFrame,
+        name: str='product_name',
+        descr: str='product_descr'
+    ):
+    embedder = Embedder()
+    embeddings = []
+
+    for title, description, index in zip(tqdm(df[name]), df[descr], df.index):
+        try:
+            title_emb = embedder.get_sent_emb(title)
+            description_emb = embedder.get_sent_emb(description)
+            embedding = np.concatenate([title_emb, description_emb])
+            embeddings.append(embedding)
+        except:
+            print(title)
+            print(index)
+            break
+    
+    return embeddings
