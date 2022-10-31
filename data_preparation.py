@@ -5,6 +5,7 @@ import re
 import numpy as np
 from wikipedia2vec import Wikipedia2Vec
 import fasttext
+from sklearn.model_selection import train_test_split
 
 
 def add_partial_ktru_codes(
@@ -98,3 +99,11 @@ class Embedder():
             sent_emb.append(self.vectorize(token))
             
         return np.mean(sent_emb, axis=0)
+
+
+def separate_train_test(
+        df: pd.DataFrame,
+        full_ktru_col: str,
+        
+    ):
+    pass
