@@ -15,7 +15,8 @@ SEED = 42
 def add_partial_ktru_codes(
         df: pd.DataFrame,
         ktru_column: str='ktru_code',
-        inplace: bool=False
+        inplace: bool=False,
+        root: bool=True
     ):
     if not inplace:
         df = df.copy()
@@ -24,6 +25,9 @@ def add_partial_ktru_codes(
 
     for prefix in prefixes:
         df[f'ktru_{prefix}'] = df[ktru_column].apply(lambda x: x[:prefix], convert_dtype=False)
+
+    if root == True:
+        df['root'] = pd.DataFrame({'root': df.shape[0] * ['root']})
 
     if not inplace:
         return df
@@ -102,6 +106,9 @@ class Embedder():
         sent_emb = []
         for token in tokens:
             sent_emb.append(self.vectorize(token))
+
+        if len(sent_emb) == 0:
+            return np.zeros(300 * (1 + self.use_wiki2vec))
             
         return np.mean(sent_emb, axis=0)
 
@@ -165,7 +172,8 @@ def separate_train_test(
 def get_embeddings(
         df: pd.DataFrame,
         name: str='product_name',
-        descr: str='product_descr'
+        descr: str='product_descr',
+        save: str=None
     ):
     embedder = Embedder()
     embeddings = []
@@ -180,5 +188,10 @@ def get_embeddings(
             print(title)
             print(index)
             break
+    
+    embeddings = np.array(embeddings)
+
+    if save != None:
+        np.save(save, embeddings)
     
     return embeddings
