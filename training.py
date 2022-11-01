@@ -75,9 +75,9 @@ def train_model(
                     loss.backward()
                     optimizer.step()
 
-            print(f"Loader: {k}. Accuracy: {round(epoch_correct/epoch_all, 4)}")
+            print(f"Loader: {k}. Accuracy: {round(epoch_correct / epoch_all, 4)}")
 
-            accuracy[k].append(epoch_correct/epoch_all)
+            accuracy[k].append(epoch_correct / epoch_all)
 
             if k == 'valid' and accuracy['valid'][-1] > best_accuracy:
                 torch.save(model.state_dict(), f'./models/_{model_id}.pt')
