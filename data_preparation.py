@@ -75,7 +75,7 @@ class NatashaTokenizer():
 
 
 class Embedder():
-    def __init__(self, use_wiki2vec=False) -> None:
+    def __init__(self, use_wiki2vec=True) -> None:
         self.use_wiki2vec = use_wiki2vec
         self.tokenizer = NatashaTokenizer()
 

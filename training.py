@@ -181,8 +181,8 @@ def generate_models_args(dataset):
         for code in codes:
             args = {
                 'code': code,
-                'ktru': hierarchy[i],
-                'ktru_succ': hierarchy[i + 1],
+                'ktru_col': hierarchy[i],
+                'ktru_succ_col': hierarchy[i + 1],
                 'index': counter
             }
             models_args.append(args)
@@ -201,8 +201,8 @@ def train_tree(dataset, embeddings, index=0, num_epochs=10, batch_size=4):
 
         node = Node(
             ktru=args['code'],
-            ktru_column=args['ktru'],
-            sub_ktru_column=args['ktru_succ'],
+            ktru_column=args['ktru_col'],
+            sub_ktru_column=args['ktru_succ_col'],
             dataset=dataset,
             embeddings=embeddings
         )
