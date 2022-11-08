@@ -20,17 +20,19 @@ class Model():
         self.model.double()
         self.model.eval()
 
-    def predict(self, embedding):
+    def predict(self, embedding, confidence: list=[]):
         with torch.no_grad():
             outp = self.model(torch.tensor(np.expand_dims(embedding, axis=0)))
         prob = softmax(outp, dim=1)
         pred = int(prob.argmax(-1))
         ktru = self.index_to_code[pred]
 
-        if len(str(self.ktru)) != 12 and Model.models_dict != None:
-            return Model.models_dict[ktru].predict(embedding)
+        confidence.append(float(prob[0][pred]))
+
+        if len(str(self.ktru)) != 12:# and Model.models_dict != None:
+            return Model.models_dict[ktru].predict(embedding, confidence)
         else:
-            return ktru
+            return ktru, confidence
 
 
 def load_classificator(dataset):
@@ -40,6 +42,6 @@ def load_classificator(dataset):
     for args in models_args:
         models_dict[args['code']] = Model(args['code'])
 
-    Model.models_dict=models_dict
+    Model.models_dict = models_dict
 
     return models_dict['root']
